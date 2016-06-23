@@ -70,3 +70,140 @@ $此时代表的prototype.js中定义的$符合，如果我们想要调用jquery
 	})(JQuery)
 ``` 
 
+## jQuery工具方法
+
+1. error 抛出错误信息
+2. isFunction 判断参数是不是函数,实质是报装了jQuery.type方法
+3. isArray 判断参数是不是数组，也是报装了一些type方法
+4. isWindow 判断参数是不是窗口
+```javascript
+	isWindow : function(obj){
+		return obj != null && obj == obj.window; //这里可以有一种情况是window == window.window window自身引用自己
+	}
+```
+5. isNumeric 判断参数是不是数字
+6. isEmptyObject 判断参数是不是空对象
+7. isPlainObject 判断参数是不是new Object()或{}的纯粹对象
+```javascript
+	isPlainObject: function( obj ) {
+		var key;
+
+		//判断是不是一个对象
+		if ( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
+			return false;
+		}
+
+		try {
+			//Object原型是没有
+			if ( obj.constructor &&
+
+				!hasOwn.call(obj, "constructor") &&
+				//只有Object原型才有isPrototypeOf属性
+				!hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
+				return false;
+			}
+		} catch ( e ) {
+			// IE8,9 Will throw exceptions on certain host objects #9897
+			return false;
+		}
+
+		// Support: IE<9
+		// Handle iteration over inherited properties before own properties.
+		if ( support.ownLast ) {
+			for ( key in obj ) {
+				return hasOwn.call( obj, key );
+			}
+		}
+
+		//in不会遍历原型上的属性，如果undefined就证明obj没有自己的属性
+		//判断属性是不是非继承属性，如果是则证明他没继承
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	},
+```
+8. type 判断对象的类型
+9. camelCase 返回驼峰命名
+10. nodeName 返回节点名字
+11. each jQuery封装的遍历方法
+```javascript
+	//传三个参数的情况
+	each: function( obj, callback, args ) {
+		var value,
+			i = 0,
+			length = obj.length,
+			isArray = isArraylike( obj );
+
+		if ( args ) {
+			//判断是不是数组，数组就用for遍历
+			if ( isArray ) {
+				for ( ; i < length; i++ ) {
+					value = callback.apply( obj[ i ], args );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			} else {
+				//判断是不是对象，数组就用for in遍历
+				for ( i in obj ) {
+					value = callback.apply( obj[ i ], args );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			}
+
+		// A special, fast, case for the most common use of each
+		} else {
+			if ( isArray ) {
+				for ( ; i < length; i++ ) {
+					value = callback.call( obj[ i ], i, obj[ i ] );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			} else {
+				for ( i in obj ) {
+					value = callback.call( obj[ i ], i, obj[ i ] );
+
+					if ( value === false ) {
+						break;
+					}
+				}
+			}
+		}
+
+		return obj;
+	},
+```
+12. trim 去除空格
+13. makeArray 将参数转换成数组
+14. inArray 查看是不是在数组里面
+15. merge 合并两个数组
+16. grep 过滤数组的
+```javascript
+	grep: function( elems, callback, invert ) {
+		var callbackInverse,
+			matches = [], //用来装返回值
+			i = 0,
+			length = elems.length,
+			callbackExpect = !invert;//invert传进来的是一个boolean值
+
+		// Go through the array, only saving the items
+		// that pass the validator function
+		for ( ; i < length; i++ ) {
+			//执行callback会返回一个值后马上取反
+			callbackInverse = !callback( elems[ i ], i );
+			if ( callbackInverse !== callbackExpect ) {
+				matches.push( elems[ i ] );
+			}
+		}
+
+		return matches;
+	},
+```
+17. map 根据回调函数处理数组，返回新数组
+18. now 返回当前时间戳

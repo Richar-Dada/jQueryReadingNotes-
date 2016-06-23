@@ -114,15 +114,83 @@ jQuery实例其实就是一个对象，但他有数组的一些特点，他有�
 
 元素选择与操作是jQuery的基础，extend插件扩展是jQuery的灵魂。
 extend可以为用户快速扩展jQuery框架，而不伤害他的机构，如果想要删除只要扩展一个空对象就行。
-extend的本质就是属性的复制，将指定的对象复制到jQuery对象上。
+extend的本质就是属性的复制，将指定的对象复制到jQuery对象上，同时他也可以对象复制，如果第一个参数是布尔值表示是否深度复制，深度复制采用了递归的思想
 
 ```javascript
-	jQuery.extend = jQuery.fn.extend = function(obj){
-		for(var key in obj){
-			this[key] = obj[key]
-		}
-		return this;
+	jQuery.extend = jQuery.fn.extend = function() {
+	//一次性定义所有的变了，jQuery的惯例写法
+	var options, name, src, copy, copyIsArray, clone,
+	target = arguments[0] || {},
+	i = 1,
+	length = arguments.length,
+	deep = false;
+	
+	// Handle a deep copy situation
+	if ( typeof target === "boolean" ) {
+	//第一个参数表示是否要深递归，类型是布尔值
+	deep = target;
+	target = arguments[1] || {};
+	// skip the boolean and the target
+	i = 2;
 	}
+	
+	// Handle case when target is a string or something (possible in deep copy)
+	if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+	target = {};
+	}
+	
+	// extend jQuery itself if only one argument is passed
+	if ( length === i ) {
+	//$("#id").extend(dest)的时候或者$('#id').extend(dest)
+	target = this;
+	--i;
+	}
+	
+	for ( ; i < length; i++ ) {//可以传入多个复制源
+	// Only deal with non-null/undefined values
+	if ( (options = arguments[ i ]) != null ) {
+	  // Extend the base object
+	  //将每个源的属性全部复制到target上
+	  for ( name in options ) {
+	    src = target[ name ];
+	    copy = options[ name ];
+	
+	    // Prevent never-ending loop
+	    if ( target === copy ) {
+	      //防止有环，例如 extend(true, target, {'target':target});
+	      continue;
+	    }
+	
+	    // Recurse if we're merging plain objects or arrays
+	    if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+	      //如果是深复制
+	      if ( copyIsArray ) {
+	        copyIsArray = false;//这句话我认为是多余的。
+	        //克隆原来target上的原属性
+			//如果src存在就让clone=src，不存在就新建一个数组
+	        clone = src && jQuery.isArray(src) ? src : [];
+	
+	      } else {
+			//如果src存在就让clone=src，不存在就新建一个对象
+	        clone = src && jQuery.isPlainObject(src) ? src : {};
+	      }
+	
+	      // Never move original objects, clone them
+	      //递归深复制
+	      target[ name ] = jQuery.extend( deep, clone, copy );
+	
+	    // Don't bring in undefined values
+	    //可以看到undefined的属性对时不会复制到target上的
+	    } else if ( copy !== undefined ) {
+	      target[ name ] = copy;
+	    }
+	  }
+	}
+	}
+	
+	// Return the modified object
+	return target;
+};
 ```
 
 ## jQuery选择器引擎Sizzle
